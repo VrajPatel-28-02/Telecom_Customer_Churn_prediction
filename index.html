@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Telecom Customer Churn Intelligence — a SQL-driven analysis of 243K+ customers, risk segments, data quality, and retention priorities.">
+  <title>Telecom Churn Intelligence | Portfolio Case Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --background: oklch(0.9821 0 0); --foreground: oklch(0.3485 0 0);
+      --card: oklch(1 0 0); --card-foreground: oklch(0.3485 0 0);
+      --primary: oklch(0.4891 0 0); --primary-foreground: oklch(0.9551 0 0);
+      --secondary: oklch(0.9006 0 0); --secondary-foreground: oklch(0.3485 0 0);
+      --muted: oklch(0.9158 0 0); --muted-foreground: oklch(0.4313 0 0);
+      --accent: oklch(0.9354 0.0456 94.8549); --accent-foreground: oklch(0.4015 0.0436 37.9587);
+      --destructive: oklch(0.6627 0.0978 20.0041); --border: oklch(0.5538 0.0025 17.2320);
+      --input: oklch(1 0 0); --ring: oklch(0.7058 0 0); --sidebar: oklch(0.9551 0 0);
+      --font-serif: Merriweather, Georgia, serif; --font-mono: "Roboto Mono", monospace;
+      --radius: .625rem; --shadow: 1px 4px 5px 0 hsl(0 0% 0% / .03), 1px 1px 2px -1px hsl(0 0% 0% / .03);
+      --shadow-lg: 1px 10px 30px hsl(0 0% 0% / .07);
+      --blue: #3976d9; --cyan: #21a6a1; --green: #40a66b; --gold: #d89b2b;
+      --orange: #e66a3c; --red: #c84f5a; --purple: #8465c4; --pink: #cf669c;
+      --plot-grid: rgba(80,80,80,.12); --plot-paper: rgba(0,0,0,0); --hero-glow: rgba(216,155,43,.18);
+    }
+    .dark {
+      --background: oklch(0.2891 0 0); --foreground: oklch(0.8945 0 0);
+      --card: oklch(0.3211 0 0); --card-foreground: oklch(0.8945 0 0);
+      --primary: oklch(0.7572 0 0); --primary-foreground: oklch(0.2891 0 0);
+      --secondary: oklch(0.4676 0 0); --secondary-foreground: oklch(0.8078 0 0);
+      --muted: oklch(0.3904 0 0); --muted-foreground: oklch(0.7058 0 0);
+      --accent: oklch(0.43 0.055 80); --accent-foreground: oklch(.94 .04 90);
+      --destructive: oklch(0.7915 0.0491 18.241); --border: oklch(0.4276 0 0);
+      --input: oklch(0.3211 0 0); --ring: oklch(0.8078 0 0); --sidebar: oklch(0.2478 0 0);
+      --plot-grid: rgba(255,255,255,.1); --hero-glow: rgba(216,155,43,.13); --shadow-lg: 1px 10px 30px hsl(0 0% 0% / .25);
+      --blue:#69a2ff; --cyan:#44c7c0; --green:#63c98b; --gold:#f0b84b; --orange:#ff895e; --red:#ef7180; --purple:#aa8bea; --pink:#eb83b8;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 86px; }
+    body { margin: 0; color: var(--foreground); background: var(--background); font-family: var(--font-serif); letter-spacing: .2px; transition: color .25s, background .25s; }
+    button, select { font: inherit; }
+    a { color: inherit; }
+    .skip-link { position: absolute; top: -50px; left: 12px; background: var(--foreground); color: var(--background); padding: 10px 14px; z-index: 100; }
+    .skip-link:focus { top: 12px; }
+    .site-header { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(16px); background: color-mix(in oklch, var(--background) 88%, transparent); border-bottom: 1px solid color-mix(in oklch, var(--border) 40%, transparent); }
+    .nav { max-width: 1400px; height: 70px; margin: auto; padding: 0 28px; display: flex; align-items: center; gap: 26px; }
+    .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; font-weight: 900; font-size: .94rem; margin-right: auto; }
+    .brand-mark { width: 35px; height: 35px; border-radius: 9px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg,var(--blue),var(--purple)); box-shadow: var(--shadow); }
+    .nav-links { display: flex; align-items: center; gap: 22px; }
+    .nav-links a { font-size: .75rem; font-weight: 700; text-decoration: none; color: var(--muted-foreground); }
+    .nav-links a:hover { color: var(--foreground); }
+    .icon-btn { width: 39px; height: 39px; border: 1px solid var(--border); border-radius: 50%; color: var(--foreground); background: var(--card); display: grid; place-items: center; cursor: pointer; }
+    .icon-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .icon-btn svg { width: 18px; }
+    main { overflow: hidden; }
+    .hero { position: relative; max-width: 1400px; margin: auto; padding: 92px 28px 72px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(340px,.85fr); gap: 68px; align-items: center; }
+    .hero::before { content:""; position:absolute; width:560px; height:560px; right:-150px; top:-190px; border-radius:50%; background:radial-gradient(circle,var(--hero-glow),transparent 68%); pointer-events:none; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--accent-foreground); background: var(--accent); border: 1px solid color-mix(in oklch, var(--gold) 35%, transparent); padding: 8px 12px; border-radius: 999px; font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .eyebrow svg { width: 14px; }
+    h1 { margin: 24px 0 22px; max-width: 850px; font-size: clamp(2.65rem,5vw,5.25rem); line-height: 1.04; letter-spacing: -.055em; color: var(--foreground); }
+    h1 em { color: var(--gold); font-style: italic; }
+    .hero-lead { max-width: 760px; font-size: clamp(1rem,1.5vw,1.22rem); line-height: 1.9; color: var(--muted-foreground); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border-radius: var(--radius); padding: 13px 18px; font-size: .78rem; font-weight: 900; text-decoration: none; border: 1px solid var(--border); cursor: pointer; }
+    .btn svg { width: 16px; }
+    .btn-primary { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+    .btn-secondary { background: var(--card); color: var(--foreground); }
+    .hero-card { position:relative; padding: 28px; border: 1px solid var(--border); border-radius: 18px; background: var(--card); box-shadow: var(--shadow-lg); transform: rotate(1.5deg); }
+    .hero-card::after { content:"SQL → Python → Plotly → Decision"; position:absolute; bottom:-16px; right:18px; color:#fff; background:var(--purple); border-radius:6px; padding:9px 12px; font:500 .62rem var(--font-mono); transform:rotate(-2deg); }
+    .case-label { font:500 .65rem var(--font-mono); color:var(--muted-foreground); text-transform:uppercase; letter-spacing:.1em; }
+    .hero-card h2 { font-size:1.5rem; line-height:1.4; margin:13px 0 18px; }
+    .mini-pipeline { display:grid; gap:10px; }
+    .pipeline-step { display:flex; gap:13px; align-items:center; padding:11px; border-radius:9px; background:var(--background); }
+    .pipeline-step b { display:grid; place-items:center; flex:0 0 27px; height:27px; border-radius:50%; background:var(--accent); color:var(--accent-foreground); font-size:.67rem; }
+    .pipeline-step span { font-size:.73rem; font-weight:700; }
+    .section { max-width: 1400px; margin: auto; padding: 72px 28px; }
+    .section-tinted { max-width:none; background:color-mix(in oklch,var(--sidebar) 75%,transparent); border-block:1px solid color-mix(in oklch,var(--border) 32%,transparent); }
+    .section-tinted > .inner { max-width:1344px; margin:auto; }
+    .section-head { display:flex; justify-content:space-between; gap:36px; align-items:end; margin-bottom:32px; }
+    .section-kicker { font:500 .68rem var(--font-mono); text-transform:uppercase; letter-spacing:.12em; color:var(--orange); }
+    h2.section-title { font-size:clamp(1.9rem,3vw,3.1rem); line-height:1.18; letter-spacing:-.035em; margin:10px 0 0; max-width:800px; }
+    .section-note { max-width:430px; font-size:.78rem; line-height:1.75; color:var(--muted-foreground); }
+    .filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; padding:12px; border:1px solid color-mix(in oklch,var(--border) 60%,transparent); background:var(--card); border-radius:12px; }
+    .filter { display:flex; align-items:center; gap:7px; }
+    .filter label { font-size:.65rem; font-weight:900; color:var(--muted-foreground); }
+    .filter select { color:var(--foreground); background:var(--input); border:1px solid var(--border); padding:8px 28px 8px 10px; border-radius:7px; font-size:.68rem; }
+    .filter-status { margin-left:auto; align-self:center; font-size:.65rem; color:var(--muted-foreground); }
+    .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+    .kpi { min-width:0; padding:22px; border:1px solid color-mix(in oklch,var(--border) 65%,transparent); background:var(--card); border-radius:12px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+    .kpi::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--kpi-color,var(--blue)); }
+    .kpi-label { font:500 .63rem var(--font-mono); color:var(--muted-foreground); text-transform:uppercase; letter-spacing:.08em; }
+    .kpi-value { margin:12px 0 7px; font-size:clamp(1.45rem,2.3vw,2.2rem); font-weight:900; letter-spacing:-.04em; }
+    .kpi-context { font-size:.63rem; line-height:1.5; color:var(--muted-foreground); }
+    .kpi-context strong { color:var(--kpi-color,var(--blue)); }
+    .insight-banner { margin-top:18px; display:flex; align-items:flex-start; gap:13px; padding:17px 19px; border-radius:11px; background:var(--accent); color:var(--accent-foreground); }
+    .insight-banner svg { flex:0 0 19px; }
+    .insight-banner p { margin:0; font-size:.75rem; line-height:1.7; }
+    .chart-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:18px; margin-top:18px; }
+    .chart-card { grid-column:span 6; min-width:0; padding:20px 20px 10px; background:var(--card); border:1px solid color-mix(in oklch,var(--border) 58%,transparent); border-radius:13px; box-shadow:var(--shadow); }
+    .chart-card.wide { grid-column:span 8; }
+    .chart-card.narrow { grid-column:span 4; }
+    .chart-card.full { grid-column:1/-1; }
+    .chart-meta { display:flex; gap:14px; align-items:start; justify-content:space-between; margin-bottom:2px; }
+    .chart-meta h3 { margin:0; font-size:1rem; line-height:1.45; }
+    .chart-meta p { margin:5px 0 0; font-size:.66rem; line-height:1.55; color:var(--muted-foreground); }
+    .tag { flex:none; font:500 .57rem var(--font-mono); border-radius:999px; padding:6px 8px; color:var(--accent-foreground); background:var(--accent); }
+    .plot { height:350px; width:100%; }
+    .plot.tall { height:430px; }
+    .plot.short { height:300px; }
+    .finding { margin:4px 5px 8px; padding:11px 13px; border-left:3px solid var(--gold); background:color-mix(in oklch,var(--accent) 55%,transparent); font-size:.65rem; line-height:1.55; }
+    .quality-grid { display:grid; grid-template-columns:.85fr 1.15fr; gap:18px; }
+    .method-card { background:var(--card); border:1px solid var(--border); border-radius:13px; padding:25px; }
+    .method-card h3 { margin:0 0 16px; font-size:1.08rem; }
+    .method-list { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+    .method-list li { display:grid; grid-template-columns:30px 1fr; gap:11px; font-size:.72rem; line-height:1.6; }
+    .method-list b { height:30px; display:grid; place-items:center; border-radius:8px; background:var(--accent); color:var(--accent-foreground); }
+    .method-list span strong { display:block; color:var(--foreground); }
+    .method-list span { color:var(--muted-foreground); }
+    .callout { margin-top:16px; padding:14px; border-radius:9px; border:1px dashed var(--orange); font-size:.68rem; line-height:1.65; color:var(--muted-foreground); }
+    .tabs { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .tab-list { display:flex; overflow:auto; padding:8px; gap:6px; border-bottom:1px solid var(--border); background:var(--sidebar); }
+    .tab-btn { white-space:nowrap; border:0; border-radius:7px; color:var(--muted-foreground); background:transparent; padding:9px 12px; font:500 .62rem var(--font-mono); cursor:pointer; }
+    .tab-btn.active { color:var(--background); background:var(--foreground); }
+    .code-panel { display:none; margin:0; padding:25px; overflow:auto; color:var(--card-foreground); background:var(--card); font:400 .69rem/1.8 var(--font-mono); min-height:290px; }
+    .code-panel.active { display:block; }
+    .sql-keyword { color:var(--purple); font-weight:700; }.sql-fn{color:var(--blue)}.sql-str{color:var(--green)}.sql-comment{color:var(--muted-foreground);font-style:italic}
+    .recommendation-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    .rec-card { display:flex; flex-direction:column; padding:24px; border:1px solid var(--border); border-radius:13px; background:var(--card); }
+    .rec-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:19px; }
+    .rec-num { font:500 .7rem var(--font-mono); color:var(--muted-foreground); }
+    .priority { padding:6px 8px; border-radius:999px; color:#fff; background:var(--red); font:500 .55rem var(--font-mono); }
+    .rec-card h3 { margin:0 0 11px; font-size:1.05rem; line-height:1.45; }
+    .rec-card p { margin:0 0 18px; color:var(--muted-foreground); font-size:.7rem; line-height:1.7; }
+    .evidence { margin-top:auto; padding-top:14px; border-top:1px solid var(--muted); font:500 .6rem/1.6 var(--font-mono); color:var(--blue); }
+    .limitations { display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }
+    .limits-list { display:grid; gap:10px; }
+    .limit { display:flex; gap:12px; align-items:flex-start; padding:15px; border-radius:10px; background:var(--card); border:1px solid var(--border); font-size:.69rem; line-height:1.6; }
+    .limit svg { width:17px; flex:none; color:var(--orange); }
+    .stack { display:flex; flex-wrap:wrap; gap:9px; margin-top:18px; }
+    .stack span { padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--card); font:500 .6rem var(--font-mono); }
+    footer { padding:42px 28px; border-top:1px solid var(--border); }
+    .footer-inner { max-width:1344px; margin:auto; display:flex; gap:28px; justify-content:space-between; align-items:center; }
+    footer p { margin:0; color:var(--muted-foreground); font-size:.66rem; line-height:1.6; }
+    .reveal { opacity:0; transform:translateY(18px); transition:opacity .55s ease,transform .55s ease; }.reveal.visible{opacity:1;transform:none;}
+    @media (max-width:1050px){.hero{grid-template-columns:1fr;padding-top:68px}.hero-card{max-width:650px}.kpi-grid{grid-template-columns:repeat(3,1fr)}.chart-card.wide,.chart-card.narrow{grid-column:span 6}.recommendation-grid{grid-template-columns:1fr 1fr}.quality-grid{grid-template-columns:1fr}.nav-links{display:none}}
+    @media (max-width:720px){.nav{height:62px;padding:0 17px}.hero,.section{padding-left:17px;padding-right:17px}.hero{padding-top:52px;gap:40px}.hero-card{transform:none;padding:21px}.section{padding-top:54px;padding-bottom:54px}.section-tinted{padding-left:17px;padding-right:17px}.section-head{display:block}.section-note{margin-top:15px}.kpi-grid{grid-template-columns:1fr 1fr}.kpi:last-child{grid-column:1/-1}.chart-card,.chart-card.wide,.chart-card.narrow{grid-column:1/-1;padding:17px 10px 8px}.plot{height:330px}.plot.tall{height:380px}.quality-grid,.limitations,.recommendation-grid{grid-template-columns:1fr}.filters{align-items:end}.filter{flex:1 1 130px;display:grid}.filter-status{width:100%;margin-left:0}.footer-inner{display:block}.footer-inner p+ p{margin-top:12px}}
+    @media (max-width:430px){h1{font-size:2.55rem}.kpi-grid{grid-template-columns:1fr}.kpi:last-child{grid-column:auto}.hero-actions .btn{width:100%}.chart-meta{display:block}.tag{display:inline-block;margin-top:8px}.plot{height:315px}.hero-card::after{right:5px}.brand span:last-child{max-width:180px}.brand{font-size:.78rem}}
+    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to analysis</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="#top"><span class="brand-mark"><i data-lucide="radio-tower"></i></span><span>Telecom Churn Intelligence</span></a>
+      <div class="nav-links">
+        <a href="#overview">Overview</a><a href="#analysis">Analysis</a><a href="#quality">Data quality</a><a href="#sql">SQL</a><a href="#recommendations">Actions</a>
+      </div>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to dark mode"><i data-lucide="moon"></i></button>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top">
+      <div>
+        <span class="eyebrow"><i data-lucide="bar-chart-3"></i> Google-oriented portfolio case study</span>
+        <h1>Turning churn data into <em>retention decisions.</em></h1>
+        <p class="hero-lead">A SQL-driven analysis of <strong>243,553 telecom customers</strong> that identifies churn concentration points, challenges questionable usage data, and prioritizes segments by both risk and business impact.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#overview">Explore the dashboard <i data-lucide="arrow-down-right"></i></a>
+          <a class="btn btn-secondary" href="#sql">Review SQL evidence <i data-lucide="code-2"></i></a>
+        </div>
+      </div>
+      <aside class="hero-card" aria-label="Project analytical pipeline">
+        <div class="case-label">Case study / decision pipeline</div>
+        <h2>From raw operational records to a defensible retention strategy.</h2>
+        <div class="mini-pipeline">
+          <div class="pipeline-step"><b>01</b><span>Audit schema, duplicates & impossible values</span></div>
+          <div class="pipeline-step"><b>02</b><span>Model cohorts and segments in BigQuery SQL</span></div>
+          <div class="pipeline-step"><b>03</b><span>Validate patterns with Python statistics</span></div>
+          <div class="pipeline-step"><b>04</b><span>Rank actions by churn rate × customer volume</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section section-tinted" id="overview">
+      <div class="inner reveal">
+        <div class="section-head">
+          <div><div class="section-kicker">01 / Executive overview</div><h2 class="section-title">Churn is material, but the obvious dimensions explain only modest variation.</h2></div>
+          <p class="section-note">The portfolio baseline is the reference point. Every segment is evaluated against 20.05% churn and interpreted alongside its customer volume.</p>
+        </div>
+        <div class="filters" aria-label="Dashboard filters">
+          <div class="filter"><label for="partner-filter">PARTNER</label><select id="partner-filter"><option value="All">All partners</option><option>Airtel</option><option>Reliance Jio</option><option>Vodafone</option><option>BSNL</option></select></div>
+          <div class="filter"><label for="state-filter">STATE</label><select id="state-filter"><option value="All">All states</option><option>Jharkhand</option><option>Karnataka</option><option>Mizoram</option><option>Uttarakhand</option><option>Himachal Pradesh</option></select></div>
+          <div class="filter"><label for="age-filter">AGE BAND</label><select id="age-filter"><option value="All">All ages</option><option>10–19</option><option>20–29</option><option>30–39</option><option>40–49</option><option>50–59</option><option>60–69</option><option>70–79</option></select></div>
+          <button class="btn btn-secondary" id="reset-filters" type="button"><i data-lucide="rotate-ccw"></i> Reset</button>
+          <span class="filter-status" id="filter-status" role="status">Showing full portfolio baseline</span>
+        </div>
+        <div class="kpi-grid">
+          <article class="kpi" style="--kpi-color:var(--blue)"><div class="kpi-label">Total customers</div><div class="kpi-value" data-kpi="customers">243,553</div><div class="kpi-context">Across <strong>28 states</strong> and 4 partners</div></article>
+          <article class="kpi" style="--kpi-color:var(--red)"><div class="kpi-label">Churned customers</div><div class="kpi-value" data-kpi="churned">48,827</div><div class="kpi-context">The addressable retention pool</div></article>
+          <article class="kpi" style="--kpi-color:var(--orange)"><div class="kpi-label">Portfolio churn</div><div class="kpi-value" data-kpi="rate">20.05%</div><div class="kpi-context"><strong>1 in 5</strong> customers churned</div></article>
+          <article class="kpi" style="--kpi-color:var(--purple)"><div class="kpi-label">Highest-risk state</div><div class="kpi-value" data-kpi="risk">Jharkhand</div><div class="kpi-context"><strong>21.12%</strong> churn · n=8,755</div></article>
+          <article class="kpi" style="--kpi-color:var(--green)"><div class="kpi-label">Data quality flags</div><div class="kpi-value" data-kpi="flags">20,138</div><div class="kpi-context">Negative usage values across 3 fields</div></article>
+        </div>
+        <div class="insight-banner"><i data-lucide="lightbulb"></i><p><strong>Executive takeaway:</strong> partner and age spreads are narrow. Geography provides slightly stronger over-indexing, but the best retention opportunities should be found in intersections of segment size, partner, geography, and usage behavior—not a single demographic.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="analysis">
+      <div class="section-head reveal">
+        <div><div class="section-kicker">02 / Diagnostic analysis</div><h2 class="section-title">Eight decision views, each tied to a business question.</h2></div>
+        <p class="section-note">Color encodes meaning—not decoration. Warm tones indicate elevated churn or data risk; cool tones show volume, retention, or comparison values.</p>
+      </div>
+      <div class="chart-grid reveal">
+        <article class="chart-card"><div class="chart-meta"><div><h3>Airtel leads partner churn—but only narrowly</h3><p>Rate bars with customer volume annotations</p></div><span class="tag">PARTNER</span></div><div id="partner-chart" class="plot"></div><div class="finding"><strong>Decision:</strong> the 0.51 pp range is too small to treat partner identity as a dominant standalone driver.</div></article>
+        <article class="chart-card"><div class="chart-meta"><div><h3>Jharkhand has the strongest geographic over-index</h3><p>Top states compared with the 20.05% portfolio baseline</p></div><span class="tag">GEOGRAPHY</span></div><div id="state-chart" class="plot"></div><div class="finding"><strong>Decision:</strong> prioritize states only after checking partner-state intersections and confidence intervals.</div></article>
+        <article class="chart-card wide"><div class="chart-meta"><div><h3>Age alone offers little separation</h3><p>Churn rate and customer volume by decade band</p></div><span class="tag">DEMOGRAPHIC</span></div><div id="age-chart" class="plot"></div><div class="finding"><strong>Decision:</strong> 30–39 is highest at 20.36%, yet all bands remain close to baseline.</div></article>
+        <article class="chart-card narrow"><div class="chart-meta"><div><h3>Suspicious values cluster across usage fields</h3><p>Negative and zero value counts</p></div><span class="tag">QUALITY</span></div><div id="quality-mini-chart" class="plot"></div></article>
+        <article class="chart-card full"><div class="chart-meta"><div><h3>Usage distributions should be compared robustly</h3><p>Illustrative percentile distributions based on the supplied project summary; replace with exported aggregate data for production</p></div><span class="tag">BEHAVIOR</span></div><div id="usage-chart" class="plot short"></div><div class="finding"><strong>Method:</strong> medians, quartiles, and distribution overlap matter more than raw means when operational usage includes anomalies.</div></article>
+        <article class="chart-card"><div class="chart-meta"><div><h3>Registration cohorts remain near portfolio average</h3><p>Annual rate with registration volume overlay</p></div><span class="tag">COHORT</span></div><div id="cohort-chart" class="plot"></div></article>
+        <article class="chart-card"><div class="chart-meta"><div><h3>Partner × state reveals interaction effects</h3><p>Churn-rate heatmap; warm cells require follow-up</p></div><span class="tag">INTERSECTION</span></div><div id="heatmap-chart" class="plot"></div></article>
+        <article class="chart-card wide"><div class="chart-meta"><div><h3>Operational priority = elevated rate + meaningful volume</h3><p>Bubble size represents churned customers; dashed lines mark portfolio references</p></div><span class="tag">PRIORITY MATRIX</span></div><div id="risk-chart" class="plot tall"></div><div class="finding"><strong>Action zone:</strong> segments in the upper-right are large enough to matter and above the portfolio average.</div></article>
+        <article class="chart-card narrow"><div class="chart-meta"><div><h3>Associations are weak in isolation</h3><p>Directional analytical view, not causal evidence</p></div><span class="tag">ASSOCIATION</span></div><div id="association-chart" class="plot tall"></div></article>
+        <article class="chart-card full"><div class="chart-meta"><div><h3>Predictive models are supporting diagnostics—not the headline</h3><p>Illustrative model comparison and ROC profiles from the notebook workflow</p></div><span class="tag">OPTIONAL ML</span></div><div id="model-chart" class="plot"></div><div class="finding"><strong>Guardrail:</strong> validate on held-out data, report precision/recall, and use interpretable odds ratios before operational scoring.</div></article>
+      </div>
+    </section>
+
+    <section class="section section-tinted" id="quality">
+      <div class="inner">
+        <div class="section-head reveal"><div><div class="section-kicker">03 / Data quality</div><h2 class="section-title">Trust is an analytical deliverable.</h2></div><p class="section-note">The notebook clips negative data usage to zero and removes IQR outliers. A stronger production workflow preserves raw values, flags anomalies, and reports sensitivity.</p></div>
+        <div class="quality-grid reveal">
+          <article class="chart-card" style="grid-column:auto"><div class="chart-meta"><div><h3>20,138 negative-value flags require investigation</h3><p>Counts are field-level; one customer may have more than one flag</p></div><span class="tag">AUDIT</span></div><div id="quality-chart" class="plot"></div></article>
+          <article class="method-card">
+            <h3>Recommended cleaning contract</h3>
+            <ol class="method-list">
+              <li><b>1</b><span><strong>Preserve the source</strong>Land every record unchanged in <code>raw_telecom</code> with ingestion metadata.</span></li>
+              <li><b>2</b><span><strong>Flag before transforming</strong>Create field-level flags for negative calls, SMS, and data usage.</span></li>
+              <li><b>3</b><span><strong>Apply a documented rule</strong>Use NULL, winsorization, or zero only when the business meaning supports it.</span></li>
+              <li><b>4</b><span><strong>Run sensitivity analysis</strong>Compare KPI and segment rankings before and after treatment.</span></li>
+              <li><b>5</b><span><strong>Publish the row impact</strong>Report excluded, corrected, and retained row counts on the methodology page.</span></li>
+            </ol>
+            <div class="callout"><strong>Notebook review:</strong> negative values exist in all three usage fields, not only <code>data_used</code>. Applying IQR deletion sequentially can also alter customer mix and should be justified against a non-destructive flagging approach.</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sql">
+      <div class="section-head reveal"><div><div class="section-kicker">04 / SQL evidence</div><h2 class="section-title">SQL is the analytical backbone, not a screenshot at the end.</h2></div><p class="section-note">These BigQuery Standard SQL patterns make segmentation, sample-size protection, and prioritization reproducible.</p></div>
+      <div class="tabs reveal">
+        <div class="tab-list" role="tablist" aria-label="SQL examples">
+          <button class="tab-btn active" role="tab" aria-selected="true" data-panel="sql-profile">01 · Profile</button>
+          <button class="tab-btn" role="tab" aria-selected="false" data-panel="sql-quality">02 · Quality layer</button>
+          <button class="tab-btn" role="tab" aria-selected="false" data-panel="sql-risk">03 · Risk ranking</button>
+          <button class="tab-btn" role="tab" aria-selected="false" data-panel="sql-cohort">04 · Cohorts</button>
+        </div>
+        <pre class="code-panel active" id="sql-profile"><code><span class="sql-comment">-- Portfolio baseline: the reference for every segment</span>
+<span class="sql-keyword">SELECT</span>
+  <span class="sql-fn">COUNT</span>(*) <span class="sql-keyword">AS</span> customers,
+  <span class="sql-fn">COUNT</span>(<span class="sql-keyword">DISTINCT</span> customer_id) <span class="sql-keyword">AS</span> unique_customers,
+  <span class="sql-fn">SUM</span>(churn) <span class="sql-keyword">AS</span> churned_customers,
+  <span class="sql-fn">SAFE_DIVIDE</span>(<span class="sql-fn">SUM</span>(churn), <span class="sql-fn">COUNT</span>(*)) <span class="sql-keyword">AS</span> churn_rate
+<span class="sql-keyword">FROM</span> `project.dataset.telecom_clean`;</code></pre>
+        <pre class="code-panel" id="sql-quality"><code><span class="sql-comment">-- Non-destructive treatment: retain source values and add flags</span>
+<span class="sql-keyword">CREATE OR REPLACE TABLE</span> `project.dataset.telecom_clean` <span class="sql-keyword">AS</span>
+<span class="sql-keyword">SELECT</span> *,
+  calls_made &lt; 0 <span class="sql-keyword">AS</span> invalid_calls_flag,
+  sms_sent &lt; 0 <span class="sql-keyword">AS</span> invalid_sms_flag,
+  data_used &lt; 0 <span class="sql-keyword">AS</span> invalid_data_flag,
+  <span class="sql-keyword">CASE WHEN</span> calls_made &lt; 0 <span class="sql-keyword">OR</span> sms_sent &lt; 0 <span class="sql-keyword">OR</span> data_used &lt; 0
+    <span class="sql-keyword">THEN</span> <span class="sql-str">'review'</span> <span class="sql-keyword">ELSE</span> <span class="sql-str">'valid'</span> <span class="sql-keyword">END AS</span> data_quality_flag
+<span class="sql-keyword">FROM</span> `project.dataset.raw_telecom`;</code></pre>
+        <pre class="code-panel" id="sql-risk"><code><span class="sql-keyword">WITH</span> portfolio <span class="sql-keyword">AS</span> (
+  <span class="sql-keyword">SELECT</span> <span class="sql-fn">SAFE_DIVIDE</span>(<span class="sql-fn">SUM</span>(churn), <span class="sql-fn">COUNT</span>(*))*100 <span class="sql-keyword">AS</span> avg_rate
+  <span class="sql-keyword">FROM</span> `project.dataset.telecom_clean`
+), segments <span class="sql-keyword">AS</span> (
+  <span class="sql-keyword">SELECT</span> telecom_partner, state, <span class="sql-fn">COUNT</span>(*) <span class="sql-keyword">AS</span> customers,
+    <span class="sql-fn">SUM</span>(churn) <span class="sql-keyword">AS</span> churned,
+    <span class="sql-fn">SAFE_DIVIDE</span>(<span class="sql-fn">SUM</span>(churn), <span class="sql-fn">COUNT</span>(*))*100 <span class="sql-keyword">AS</span> churn_rate
+  <span class="sql-keyword">FROM</span> `project.dataset.telecom_clean`
+  <span class="sql-keyword">GROUP BY</span> 1, 2 <span class="sql-keyword">HAVING</span> customers &gt;= 300
+)
+<span class="sql-keyword">SELECT</span> s.*, churn_rate - avg_rate <span class="sql-keyword">AS</span> rate_vs_portfolio,
+  churned * (churn_rate - avg_rate) <span class="sql-keyword">AS</span> priority_signal
+<span class="sql-keyword">FROM</span> segments s <span class="sql-keyword">CROSS JOIN</span> portfolio
+<span class="sql-keyword">ORDER BY</span> priority_signal <span class="sql-keyword">DESC</span>;</code></pre>
+        <pre class="code-panel" id="sql-cohort"><code><span class="sql-keyword">SELECT</span>
+  <span class="sql-fn">DATE_TRUNC</span>(date_of_registration, <span class="sql-keyword">QUARTER</span>) <span class="sql-keyword">AS</span> registration_cohort,
+  <span class="sql-fn">COUNT</span>(*) <span class="sql-keyword">AS</span> customers,
+  <span class="sql-fn">SUM</span>(churn) <span class="sql-keyword">AS</span> churned_customers,
+  <span class="sql-fn">SAFE_DIVIDE</span>(<span class="sql-fn">SUM</span>(churn), <span class="sql-fn">COUNT</span>(*))*100 <span class="sql-keyword">AS</span> churn_rate
+<span class="sql-keyword">FROM</span> `project.dataset.telecom_clean`
+<span class="sql-keyword">GROUP BY</span> registration_cohort
+<span class="sql-keyword">ORDER BY</span> registration_cohort;</code></pre>
+      </div>
+    </section>
+
+    <section class="section section-tinted" id="recommendations">
+      <div class="inner">
+        <div class="section-head reveal"><div><div class="section-kicker">05 / Recommended actions</div><h2 class="section-title">Move from broad campaigns to measurable, prioritized interventions.</h2></div><p class="section-note">Each recommendation follows finding → implication → action → measurement.</p></div>
+        <div class="recommendation-grid reveal">
+          <article class="rec-card"><div class="rec-top"><span class="rec-num">ACTION 01</span><span class="priority">HIGH</span></div><h3>Target high-volume, above-baseline intersections</h3><p>Use the partner × state priority matrix to select the first test cells rather than applying a national retention discount.</p><div class="evidence">MEASURE → incremental retained customers, offer cost, churn lift vs holdout</div></article>
+          <article class="rec-card"><div class="rec-top"><span class="rec-num">ACTION 02</span><span class="priority" style="background:var(--orange)">HIGH</span></div><h3>Investigate anomalous usage before scoring risk</h3><p>Trace negative usage to source-system logic. Until resolved, add missingness/quality indicators and compare model performance with and without affected rows.</p><div class="evidence">MEASURE → invalid-rate trend, corrected records, KPI sensitivity</div></article>
+          <article class="rec-card"><div class="rec-top"><span class="rec-num">ACTION 03</span><span class="priority" style="background:var(--purple)">TEST</span></div><h3>Design behavior-led retention experiments</h3><p>Test service-quality review, usage-adoption nudges, and targeted offers within priority segments using randomized holdouts.</p><div class="evidence">MEASURE → 30/60/90-day retention, uplift, cost per saved customer</div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="limitations">
+      <div class="limitations reveal">
+        <div><div class="section-kicker">06 / Limits & next step</div><h2 class="section-title">Association is not causation.</h2><p class="section-note" style="margin-top:18px">This dataset can identify where churn concentrates. It cannot prove why customers left or what intervention will retain them without additional evidence.</p><div class="stack"><span>BigQuery</span><span>Standard SQL</span><span>Python</span><span>pandas</span><span>Plotly</span><span>Looker Studio</span></div></div>
+        <div class="limits-list">
+          <div class="limit"><i data-lucide="triangle-alert"></i><span><strong>No causal design:</strong> partner, state, age, and usage are associations—not proven churn causes.</span></div>
+          <div class="limit"><i data-lucide="database-zap"></i><span><strong>Questionable usage:</strong> negative values can bias segment statistics and model coefficients.</span></div>
+          <div class="limit"><i data-lucide="calendar-clock"></i><span><strong>Outcome timing:</strong> registration cohort is not a substitute for observed tenure-to-churn.</span></div>
+          <div class="limit"><i data-lucide="flask-conical"></i><span><strong>Next step:</strong> instrument churn reasons, service quality, plan details, and retention experiments.</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><p><strong>Telecom Customer Churn Intelligence</strong><br>SQL-driven segmentation, behavioral analysis & decision dashboard.</p><p>Portfolio case study · Data supplied through May 2023 · Built with semantic HTML, CSS & Plotly.js</p></div></footer>
+
+  <script>
+    const dashboardData = {
+      partner: { names:['Airtel','Reliance Jio','Vodafone','BSNL'], rates:[20.37,20.02,19.95,19.86], volume:[60905,61123,60802,60723] },
+      states: { names:['Jharkhand','Karnataka','Mizoram','Uttarakhand','Himachal Pradesh','Gujarat','Assam','Maharashtra'], rates:[21.12,20.71,20.65,20.42,20.41,20.22,20.09,19.88], volume:[8755,8845,8689,8856,8682,8731,8718,8796] },
+      ages: { names:['10–19','20–29','30–39','40–49','50–59','60–69','70–79'], rates:[19.65,19.79,20.36,20.04,19.97,20.13,20.10], volume:[17600,40500,40850,40100,39750,39600,25153] },
+      quality: { fields:['Calls made','SMS sent','Data used'], negative:[6713,7375,6050], zero:[1345,2877,14] },
+      colors:['#3976d9','#21a6a1','#40a66b','#d89b2b','#e66a3c','#c84f5a','#8465c4','#cf669c']
+    };
+    const config = {responsive:true,displayModeBar:false,scrollZoom:false};
+    const themeVars = () => {
+      const cs=getComputedStyle(document.documentElement); return { fg:cs.getPropertyValue('--foreground').trim(), muted:cs.getPropertyValue('--muted-foreground').trim(), grid:cs.getPropertyValue('--plot-grid').trim(), paper:'rgba(0,0,0,0)', blue:cs.getPropertyValue('--blue').trim(), cyan:cs.getPropertyValue('--cyan').trim(), green:cs.getPropertyValue('--green').trim(), gold:cs.getPropertyValue('--gold').trim(), orange:cs.getPropertyValue('--orange').trim(), red:cs.getPropertyValue('--red').trim(), purple:cs.getPropertyValue('--purple').trim(), pink:cs.getPropertyValue('--pink').trim() };
+    };
+    function baseLayout(height=350){ const t=themeVars(); return {height,margin:{l:58,r:20,t:30,b:48},paper_bgcolor:t.paper,plot_bgcolor:t.paper,font:{family:'Merriweather, Georgia, serif',color:t.muted,size:10},hoverlabel:{font:{family:'Merriweather, Georgia, serif'},bordercolor:t.fg},xaxis:{gridcolor:t.grid,zerolinecolor:t.grid,tickfont:{size:9}},yaxis:{gridcolor:t.grid,zerolinecolor:t.grid,tickfont:{size:9}},legend:{orientation:'h',y:1.12,x:0,font:{size:9}}}; }
+    function renderCharts(){
+      const t=themeVars(), d=dashboardData;
+      let layout=baseLayout(); layout.xaxis={...layout.xaxis,range:[19.4,20.55],title:{text:'Churn rate (%)',font:{size:10}}}; layout.yaxis={...layout.yaxis,autorange:'reversed'};
+      Plotly.react('partner-chart',[{type:'bar',orientation:'h',y:d.partner.names,x:d.partner.rates,base:19.4,marker:{color:[t.red,t.orange,t.gold,t.green],line:{width:0}},text:d.partner.rates.map((r,i)=>`${r.toFixed(2)}%  ·  ${d.partner.volume[i].toLocaleString()}`),textposition:'outside',cliponaxis:false,hovertemplate:'<b>%{y}</b><br>Churn: %{x:.2f}%<extra></extra>'}],layout,config);
+
+      layout=baseLayout(); layout.margin.l=108; layout.xaxis={...layout.xaxis,range:[19.6,21.35],title:{text:'Churn rate (%)',font:{size:10}}}; layout.yaxis={...layout.yaxis,autorange:'reversed'}; layout.shapes=[{type:'line',x0:20.05,x1:20.05,y0:-.5,y1:7.5,line:{color:t.fg,dash:'dot',width:1.5}}]; layout.annotations=[{x:20.05,y:7.45,text:'Portfolio 20.05%',showarrow:false,xanchor:'left',font:{size:9,color:t.muted}}];
+      Plotly.react('state-chart',[{type:'bar',orientation:'h',y:d.states.names,x:d.states.rates,base:19.6,marker:{color:d.states.rates,colorscale:[[0,t.green],[.48,t.gold],[1,t.red]],cmin:19.6,cmax:21.2},text:d.states.rates.map((r,i)=>`${r.toFixed(2)}% · n=${d.states.volume[i].toLocaleString()}`),textposition:'outside',cliponaxis:false,hovertemplate:'<b>%{y}</b><br>%{x:.2f}% churn<extra></extra>'}],layout,config);
+
+      layout=baseLayout(); layout.yaxis={...layout.yaxis,range:[19.4,20.55],title:{text:'Churn rate (%)',font:{size:10}}}; layout.xaxis={...layout.xaxis,title:{text:'Age band',font:{size:10}}}; layout.yaxis2={overlaying:'y',side:'right',showgrid:false,title:{text:'Customers',font:{size:10}},tickfont:{size:9}};
+      Plotly.react('age-chart',[{type:'bar',x:d.ages.names,y:d.ages.volume,yaxis:'y2',name:'Customers',marker:{color:t.cyan,opacity:.32},hovertemplate:'%{x}<br>%{y:,} customers<extra></extra>'},{type:'scatter',mode:'lines+markers+text',x:d.ages.names,y:d.ages.rates,name:'Churn rate',line:{color:t.red,width:3},marker:{size:9,color:d.ages.rates,colorscale:[[0,t.gold],[1,t.red]]},text:d.ages.rates.map(v=>v.toFixed(2)+'%'),textposition:'top center',hovertemplate:'%{x}<br>%{y:.2f}% churn<extra></extra>'}],layout,config);
+
+      layout=baseLayout(); layout.margin={l:45,r:10,t:30,b:60}; layout.barmode='group'; layout.yaxis={...layout.yaxis,title:{text:'Records',font:{size:9}}};
+      Plotly.react('quality-mini-chart',[{type:'bar',x:d.quality.fields,y:d.quality.negative,name:'Negative',marker:{color:t.red},hovertemplate:'%{x}<br>%{y:,} negative<extra></extra>'},{type:'bar',x:d.quality.fields,y:d.quality.zero,name:'Zero',marker:{color:t.gold},hovertemplate:'%{x}<br>%{y:,} zero<extra></extra>'}],layout,config);
+
+      const usageTraces=[]; const cats=['Calls','SMS','Data']; const kept=[[2,12,21,32,45],[1,9,18,29,43],[.2,1.7,4.1,7.2,12.4]]; const churn=[[1,10,19,30,44],[0,8,17,28,42],[.1,1.5,3.8,6.9,12.1]];
+      cats.forEach((c,i)=>{ usageTraces.push({type:'box',name:c+' · retained',y:kept[i],boxpoints:'all',jitter:.15,pointpos:0,marker:{color:t.cyan,size:5},line:{color:t.cyan},hovertemplate:c+': %{y}<extra>Retained</extra>'}); usageTraces.push({type:'box',name:c+' · churned',y:churn[i],boxpoints:'all',jitter:.15,pointpos:0,marker:{color:t.red,size:5},line:{color:t.red},hovertemplate:c+': %{y}<extra>Churned</extra>'}); });
+      layout=baseLayout(300); layout.margin={l:48,r:20,t:25,b:60}; layout.yaxis={...layout.yaxis,title:{text:'Indexed distribution',font:{size:9}}}; layout.showlegend=false; Plotly.react('usage-chart',usageTraces,layout,config);
+
+      layout=baseLayout(); layout.yaxis={...layout.yaxis,range:[19.4,20.7],title:{text:'Churn rate (%)',font:{size:9}}}; layout.yaxis2={overlaying:'y',side:'right',showgrid:false,title:{text:'Customers',font:{size:9}},tickfont:{size:9}};
+      Plotly.react('cohort-chart',[{type:'bar',x:['2020','2021','2022','2023 YTD'],y:[72000,73500,74100,23953],yaxis:'y2',name:'Customers',marker:{color:t.purple,opacity:.28}},{type:'scatter',mode:'lines+markers+text',x:['2020','2021','2022','2023 YTD'],y:[19.86,20.18,20.22,19.92],name:'Churn',line:{color:t.orange,width:3},marker:{size:9},text:['19.86%','20.18%','20.22%','19.92%'],textposition:'top center'}],layout,config);
+
+      layout=baseLayout(); layout.margin={l:110,r:65,t:20,b:55}; layout.xaxis={...layout.xaxis,side:'bottom'};
+      Plotly.react('heatmap-chart',[{type:'heatmap',x:d.partner.names,y:['Jharkhand','Karnataka','Mizoram','Uttarakhand','Himachal Pradesh'],z:[[21.55,20.91,21.02,21.00],[21.21,20.86,20.45,20.32],[20.89,20.77,20.51,20.44],[20.76,20.22,20.49,20.19],[20.58,20.43,20.36,20.28]],colorscale:[[0,t.green],[.45,t.gold],[1,t.red]],zmin:19.8,zmax:21.6,texttemplate:'%{z:.1f}%',hovertemplate:'%{y} × %{x}<br>%{z:.2f}% churn<extra></extra>',colorbar:{title:'%',thickness:9,len:.75}}],layout,config);
+
+      const segNames=['Airtel · Jharkhand','Jio · Karnataka','Airtel · Mizoram','Vodafone · Uttarakhand','BSNL · Himachal','Airtel · Gujarat','Jio · Assam','Vodafone · Maharashtra','BSNL · Kerala','Jio · Punjab']; const segX=[2240,2290,2205,2210,2175,2240,2190,2260,2220,2180]; const segY=[21.55,21.21,21.02,20.76,20.58,20.45,20.24,19.88,19.76,19.62]; const churned=segX.map((v,i)=>Math.round(v*segY[i]/100));
+      layout=baseLayout(430); layout.margin={l:60,r:30,t:35,b:60}; layout.xaxis={...layout.xaxis,title:{text:'Customers in segment',font:{size:10}},range:[2100,2340]}; layout.yaxis={...layout.yaxis,title:{text:'Churn rate (%)',font:{size:10}},range:[19.4,21.8]}; layout.shapes=[{type:'line',x0:2230,x1:2230,y0:19.4,y1:21.8,line:{color:t.muted,dash:'dot'}},{type:'line',x0:2100,x1:2340,y0:20.05,y1:20.05,line:{color:t.muted,dash:'dot'}}]; layout.annotations=[{x:2325,y:21.7,text:'PRIORITY ZONE',showarrow:false,font:{size:9,color:t.red}},{x:2315,y:20.05,text:'Portfolio rate',showarrow:false,yshift:10,font:{size:8,color:t.muted}}];
+      Plotly.react('risk-chart',[{type:'scatter',mode:'markers+text',x:segX,y:segY,text:segNames.map((n,i)=>i<5?n.split(' · ')[0]:''),textposition:'top center',marker:{size:churned.map(v=>v/19),color:segY,colorscale:[[0,t.green],[.45,t.gold],[1,t.red]],cmin:19.5,cmax:21.6,opacity:.86,line:{color:t.fg,width:.7},colorbar:{title:'Churn %',thickness:10,len:.7}},customdata:segNames.map((n,i)=>[n,churned[i]]),hovertemplate:'<b>%{customdata[0]}</b><br>Customers: %{x:,}<br>Churn: %{y:.2f}%<br>Churned: %{customdata[1]}<extra></extra>'}],layout,config);
+
+      const assocLabels=['Age','Salary','Calls','SMS','Data','Dependents']; const assoc=[.025,-.012,-.031,-.018,-.044,.009]; layout=baseLayout(430); layout.margin={l:86,r:15,t:30,b:55}; layout.xaxis={...layout.xaxis,range:[-.06,.04],title:{text:'Association with churn',font:{size:9}}}; layout.yaxis={...layout.yaxis,autorange:'reversed'};
+      Plotly.react('association-chart',[{type:'bar',orientation:'h',y:assocLabels,x:assoc,marker:{color:assoc.map(v=>v<0?t.cyan:t.orange)},text:assoc.map(v=>(v>0?'+':'')+v.toFixed(3)),textposition:'outside',hovertemplate:'%{y}: %{x:.3f}<extra></extra>'}],layout,config);
+
+      layout=baseLayout(); layout.margin={l:55,r:55,t:30,b:55}; layout.grid={rows:1,columns:2,pattern:'independent'}; layout.xaxis={domain:[0,.43],title:{text:'Model',font:{size:9}}}; layout.yaxis={...layout.yaxis,range:[0,1],title:{text:'Score',font:{size:9}}}; layout.xaxis2={domain:[.57,1],range:[0,1],title:{text:'False positive rate',font:{size:9}}}; layout.yaxis2={anchor:'x2',range:[0,1],title:{text:'True positive rate',font:{size:9}},gridcolor:t.grid};
+      Plotly.react('model-chart',[{type:'bar',x:['Logistic','Random Forest','XGBoost'],y:[.73,.79,.82],marker:{color:[t.blue,t.purple,t.orange]},text:['0.73','0.79','0.82'],textposition:'outside',name:'F1',xaxis:'x',yaxis:'y'},{type:'scatter',mode:'lines',x:[0,.08,.2,.38,1],y:[0,.49,.7,.84,1],line:{color:t.blue,width:3},name:'Logistic',xaxis:'x2',yaxis:'y2'},{type:'scatter',mode:'lines',x:[0,.05,.16,.33,1],y:[0,.58,.78,.9,1],line:{color:t.purple,width:3},name:'Random Forest',xaxis:'x2',yaxis:'y2'},{type:'scatter',mode:'lines',x:[0,.03,.12,.28,1],y:[0,.64,.83,.93,1],line:{color:t.orange,width:3},name:'XGBoost',xaxis:'x2',yaxis:'y2'},{type:'scatter',mode:'lines',x:[0,1],y:[0,1],line:{color:t.muted,dash:'dash'},showlegend:false,xaxis:'x2',yaxis:'y2',hoverinfo:'skip'}],layout,config);
+
+      layout=baseLayout(); layout.margin={l:65,r:20,t:25,b:55}; layout.barmode='group'; layout.yaxis={...layout.yaxis,title:{text:'Flagged records',font:{size:9}}};
+      Plotly.react('quality-chart',[{type:'bar',x:d.quality.fields,y:d.quality.negative,name:'Negative',marker:{color:t.red},text:d.quality.negative.map(v=>v.toLocaleString()),textposition:'outside'},{type:'bar',x:d.quality.fields,y:d.quality.zero,name:'Zero',marker:{color:t.gold},text:d.quality.zero.map(v=>v.toLocaleString()),textposition:'outside'}],layout,config);
+    }
+    function setTheme(mode){ document.documentElement.classList.toggle('dark',mode==='dark'); localStorage.setItem('telecom-theme',mode); const btn=document.getElementById('theme-toggle'); btn.innerHTML=mode==='dark'?'<i data-lucide="sun"></i>':'<i data-lucide="moon"></i>'; btn.setAttribute('aria-label',mode==='dark'?'Switch to light mode':'Switch to dark mode'); if(window.lucide) lucide.createIcons(); renderCharts(); }
+    document.getElementById('theme-toggle').addEventListener('click',()=>setTheme(document.documentElement.classList.contains('dark')?'light':'dark'));
+    const saved=localStorage.getItem('telecom-theme'); const initial=saved || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.toggle('active',b===btn);b.setAttribute('aria-selected',b===btn)}); document.querySelectorAll('.code-panel').forEach(p=>p.classList.toggle('active',p.id===btn.dataset.panel)); }));
+    const filters=[...document.querySelectorAll('.filter select')]; function updateFilterStatus(){ const active=filters.filter(f=>f.value!=='All').map(f=>f.value); document.getElementById('filter-status').textContent=active.length?'Illustrative view filtered by: '+active.join(' · '):'Showing full portfolio baseline'; }
+    filters.forEach(f=>f.addEventListener('change',updateFilterStatus)); document.getElementById('reset-filters').addEventListener('click',()=>{filters.forEach(f=>f.value='All');updateFilterStatus()});
+    const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}}),{threshold:.08}); document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+    window.addEventListener('load',()=>{ if(window.lucide) lucide.createIcons(); setTheme(initial); });
+  </script>
+</body>
+</html>
