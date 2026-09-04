@@ -1,4 +1,4 @@
-Telecom Data Analysis — Google-Oriented Portfolio Case Study
+Telecom Data Analysis — Portfolio Case Study
 
 Project Overview
 
